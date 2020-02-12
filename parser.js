@@ -63,9 +63,3 @@ const stringArray = textArray.map(textLine => {
 });
 console.log(stringArray);
 fs.writeFileSync("./parsedInfo.txt", stringArray.join("\n"));
-
-function addZero(num) {
-  if (num < 10) return "00" + num;
-  if (num < 100) return "0" + num;
-  return "" + num;
-}
