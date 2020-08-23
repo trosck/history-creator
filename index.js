@@ -7,8 +7,8 @@ const panel = document.getElementById("panel")
 const panel_items = panel.getElementsByClassName("panel_item")
 
 const wrapper = document.getElementById("canvas-wrapper")
-width = wrapper.offsetWidth
-height = wrapper.offsetHeight
+const width = wrapper.offsetWidth
+const height = wrapper.offsetHeight
 
 canvas.width = width
 canvas.height = height
@@ -34,33 +34,43 @@ class Position {
 
 class Shape extends Position {
   constructor(options) {
+    super(0, 0)
     this.initialWidth = options.width
     this.initialHeight = options.height
     this.linesCount = options.lines
-
-    super(0, 0)
   }
+  draw() {}
 }
 
 class Circle extends Shape {
   constructor(options) {
-    options.lines = 1
     super(options)
+    options.lines = 1
+  }
+  draw(cx) {
+    cx.beginPath()
+    cx.fillStyle = "black"
+    cx.arc(75, 75, 50, 0, Math.PI * 2, true)
+    cx.stroke()
   }
 }
 
 class Rectangle extends Shape {
   constructor(options) {
-    options.lines = 4
     super(options)
+    options.lines = 4
+  }
+  draw(cx) {
+    cx.fillStyle = "black"
+    cx.fillRect(0, 0, this.initialWidth, this.initialWidth)
   }
 }
 
 function createShape(name) {
   const { CIRCLE, RECTANGLE } = SHAPES
   const options = {
-    initialHeight: 100,
-    initialWidth: 100,
+    width: 100,
+    height: 100,
   }
   switch(name) {
     case CIRCLE: return new Circle(options)
@@ -70,10 +80,17 @@ function createShape(name) {
 
 const shapes_array = []
 
-panel_items.forEach(el => {
+;[].forEach.call(panel_items, el => {
   el.addEventListener("click", ( ) => {
     const name = el.dataset.shape
     const shape = createShape(name)
     shapes_array.push(shape)
+    drawShapes()
   })
 })
+
+function drawShapes() {
+  shapes_array.forEach(shape => {
+    shape.draw(cx)
+  })
+}
