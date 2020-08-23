@@ -27,25 +27,36 @@ class Position {
     this.y = y
   }
   
-  getPosition() {
-    return `${this.x}:${this.y}`
+  get position() {
+    return { x: this.x, y: this.y }
+  }
+
+  set position({ x, y }) {
+    this.x = x
+    this.y = y
   }
 }
 
 class Shape extends Position {
   constructor(options) {
     super(0, 0)
-    this.initialWidth = options.width
-    this.initialHeight = options.height
+    this.width = options.width
+    this.height = options.height
     this.linesCount = options.lines
   }
+  resize() {}
   draw() {}
+  inRange() {}
+  get range() {}
+}
+
+class InteractiveShape {
+
 }
 
 class Circle extends Shape {
   constructor(options) {
-    super(options)
-    options.lines = 1
+    super({ ...options, lines: 1})
   }
   draw(cx) {
     cx.beginPath()
@@ -53,16 +64,33 @@ class Circle extends Shape {
     cx.arc(75, 75, 50, 0, Math.PI * 2, true)
     cx.stroke()
   }
+  inRange(x, y) {
+    
+  }
 }
 
 class Rectangle extends Shape {
   constructor(options) {
-    super(options)
-    options.lines = 4
+    super({ ...options, lines: 4 })
+  }
+  get range() {
+    return {
+      x: [this.x, this.x + this.width],
+      y: [this.y, this.y + this.height],
+    }
+  }
+  resize(width, height) {
+    this.width = width
+    this.height = height
   }
   draw(cx) {
     cx.fillStyle = "black"
-    cx.fillRect(0, 0, this.initialWidth, this.initialWidth)
+    cx.fillRect(this.position[0], this.position[1], this.initialWidth, this.initialWidth)
+  }
+  inRange(x, y) {
+    const compareX = x >= this.range.x[0] && x <= this.range.x[1]
+    const compareY = y >= this.range.y[0] && y <= this.range.y[1]
+    return compareX && compareY
   }
 }
 
@@ -94,3 +122,10 @@ function drawShapes() {
     shape.draw(cx)
   })
 }
+
+canvas.addEventListener("click", event => {
+  console.log(event)
+  const xAxis = event.layerX
+  const yAxis = event.layerY
+
+})
