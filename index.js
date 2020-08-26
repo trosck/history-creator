@@ -128,12 +128,24 @@ class Drawer {
     this.#setListenerOnClickShape()
   }
   #setListenerOnClickShape() {
-    this.field.addEventListener("click", event => {
+    this.field.addEventListener("mousedown", event => {
       const xAxis = event.layerX
       const yAxis = event.layerY
       const shape = this.shapes_array.find(el => el.inRange(xAxis, yAxis))
       if (shape) {
-        console.log("congratulations!!! u find her")
+        const removeListeners = ( ) => {
+          this.field.removeEventListener("mousemove", dragElement)
+          this.field.removeEventListener("mouseup", removeListeners)
+        }
+
+        const dragElement = ({ layerX: x, layerY: y }) => {
+          shape.position = { x, y }
+          this.field.reset()
+          this.drawShapes()
+        }
+
+        this.field.addEventListener("mousemove", dragElement)
+        this.field.addEventListener("mouseup", removeListeners)
       }
     })
   }
@@ -204,8 +216,11 @@ class Application {
     canvas.height = height
 
     const context = canvas.getContext("2d")
-    context.fillStyle = "rgb(218, 210, 216)"
-    context.fillRect(0, 0, width, height)
+    canvas.reset = function() {
+      context.fillStyle = "rgb(218, 210, 216)"
+      context.fillRect(0, 0, width, height)
+    }
+    canvas.reset()
     
     return canvas
   }
