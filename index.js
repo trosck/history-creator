@@ -42,7 +42,6 @@ class Shape extends Position {
     super(0, 0)
     this.width = options.width
     this.height = options.height
-    this.linesCount = options.lines
   }
   resize() {}
   draw() {}
@@ -50,28 +49,39 @@ class Shape extends Position {
   get range() {}
 }
 
-class InteractiveShape {
-
+class RoundedShape extends Shape {
+  constructor(options) {
+    super(options)
+    this.radius = this.width / 2
+  }
 }
 
-class Circle extends Shape {
+class Circle extends RoundedShape {
   constructor(options) {
-    super({ ...options, lines: 1})
+    super({
+      ...options, 
+      width: options.width / 2,
+    })
+    this.position = { x: this.width, y: this.width }
   }
   draw(cx) {
     cx.beginPath()
     cx.fillStyle = "black"
-    cx.arc(75, 75, 50, 0, Math.PI * 2, true)
+    cx.arc(this.position.x, this.position.y, this.width, 0, Math.PI * 2)
     cx.stroke()
   }
   inRange(x, y) {
-    
+    const deltaX = (x - this.position.x) ** 2
+    const deltaY = (y - this.position.y) ** 2
+    return Math.sqrt(deltaX + deltaY) <= this.width
   }
 }
 
 class Rectangle extends Shape {
   constructor(options) {
-    super({ ...options, lines: 4 })
+    super({
+      ...options,
+    })
   }
   get range() {
     return {
@@ -84,8 +94,16 @@ class Rectangle extends Shape {
     this.height = height
   }
   draw(cx) {
+    const borderWidth = 5
     cx.fillStyle = "black"
-    cx.fillRect(this.position[0], this.position[1], this.initialWidth, this.initialWidth)
+    cx.fillRect(this.position.x, this.position.y, this.width, this.height)
+    cx.fillStyle = "white"
+    cx.fillRect(
+      this.position.x + borderWidth, 
+      this.position.y + borderWidth, 
+      this.width - borderWidth * 2,
+      this.height - borderWidth * 2,
+    )
   }
   inRange(x, y) {
     const compareX = x >= this.range.x[0] && x <= this.range.x[1]
@@ -124,8 +142,10 @@ function drawShapes() {
 }
 
 canvas.addEventListener("click", event => {
-  console.log(event)
   const xAxis = event.layerX
   const yAxis = event.layerY
-
+  const shape = shapes_array.find(el => el.inRange(xAxis, yAxis))
+  if (shape) {
+    console.log("congratulations!!! u find her")
+  }
 })
