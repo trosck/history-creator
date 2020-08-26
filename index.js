@@ -1,21 +1,5 @@
 "use strict"
 
-const canvas = document.getElementById("canvas")
-const cx = canvas.getContext("2d")
-
-const panel = document.getElementById("panel")
-const panel_items = panel.getElementsByClassName("panel_item")
-
-const wrapper = document.getElementById("canvas-wrapper")
-const width = wrapper.offsetWidth
-const height = wrapper.offsetHeight
-
-canvas.width = width
-canvas.height = height
-
-cx.fillStyle = "rgb(218, 210, 216)"
-cx.fillRect(0, 0, width, height)
-
 const SHAPES = {
   CIRCLE: "circle",
   RECTANGLE: "rectangle",
@@ -39,7 +23,7 @@ class Position {
 
 class Shape extends Position {
   constructor(options) {
-    super(10, 10)
+    super(options.initialX, options.initialY)
     this.borderWidth = 5
     this.width = options.width
     this.height = options.height
@@ -56,18 +40,25 @@ class CanvasCircle extends Shape {
       ...options, 
       width: options.width / 2,
     })
-    this.position = { x: this.width, y: this.width }
+    const { x, y } = this.position
+    this.position = { x: this.width + x, y: this.width + y }
   }
   draw(cx) {
     const borderWidth = this.borderWidth
 
     cx.beginPath()
     cx.fillStyle = "black"
-    cx.arc(this.position.x, this.position.y, this.width, 0, Math.PI * 2)
+    cx.arc(
+      this.position.x, 
+      this.position.y, 
+      this.width, 
+      0, 
+      Math.PI * 2
+    )
     cx.fill()
 
-    cx.fillStyle = "white"
     cx.beginPath()
+    cx.fillStyle = "white"
     cx.arc(
       this.position.x, 
       this.position.y, 
@@ -123,7 +114,8 @@ class Drawer {
   constructor(field) {
     this.field = field
     this.shapes_array = []
-
+  }
+  init(panel_items) {
     ;[].forEach.call(panel_items, el => {
       el.addEventListener("click", ( ) => {
         const name = el.dataset.shape
@@ -133,9 +125,9 @@ class Drawer {
       })
     })
 
-    this.setListenerOnClickShape()
+    this.#setListenerOnClickShape()
   }
-  setListenerOnClickShape() {
+  #setListenerOnClickShape() {
     this.field.addEventListener("click", event => {
       const xAxis = event.layerX
       const yAxis = event.layerY
@@ -145,7 +137,9 @@ class Drawer {
       }
     })
   }
-  drawShapes() {}
+  drawShapes() {
+    this.shapes_array.forEach(shape => shape.draw(this.context))
+  }
   createShape() {}
 }
 
@@ -159,32 +153,69 @@ class CanvasDrawer extends Drawer {
     const options = {
       width: 100,
       height: 100,
+      initialX: 100,
+      initialY: 100,
     }
     switch(name) {
       case CIRCLE: return new CanvasCircle(options)
       case RECTANGLE: return new CanvasRectangle(options)
     }
   }
-  drawShapes() {
-    this.shapes_array.forEach(shape => shape.draw(this.context))
-  }
 }
 
 class SVGDrawer extends Drawer {
-
+  // soon...
 }
 
 class Application {
-  constructor({ type, id }) {
-    this.init(type, id)
+  constructor({ type, fieldID, panelItemClass }) {
+    const field = document.getElementById(fieldID)
+    const { drawer, el } = this.init({ type, field })
+
+    field.appendChild(el)
+
+    const panel_items = document.getElementsByClassName(panelItemClass)
+    drawer.init(panel_items)
   }
-  init(type, id) {
-    const field = document.getElementById(id)
-    switch(type) {
-      case "canvas": return new CanvasDrawer(field)
-      case "svg": return new SVGDrawer(field)
+  init({ type, field }) {
+    const size = {
+      width: field.offsetWidth,
+      height: field.offsetHeight,
     }
+
+    if (type === "canvas") {
+      const canvas = this.initCanvas(size)
+      return {
+        drawer: new CanvasDrawer(canvas),
+        el: canvas,
+      }
+    }
+    if (type === "svg") {
+      const svg = this.initSVG(size)
+      return {
+        drawer: new SVGDrawer(svg),
+        el: svg
+      }
+    }
+  }
+  initCanvas({ width, height }) {
+    const canvas = document.createElement("canvas")
+    canvas.width = width
+    canvas.height = height
+
+    const context = canvas.getContext("2d")
+    context.fillStyle = "rgb(218, 210, 216)"
+    context.fillRect(0, 0, width, height)
+    
+    return canvas
+  }
+  initSVG({ width, height }) {
+    const svg = document.createElement("svg")
+    svg.width = width
+    svg.height = height 
+
+    return svg
   }
 }
 
-new Application({ type: "canvas", id: "canvas" })
+new Application({ type: "canvas", fieldID: "field-wrapper", panelItemClass: "panel_item" })
