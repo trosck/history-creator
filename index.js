@@ -39,7 +39,8 @@ class Position {
 
 class Shape extends Position {
   constructor(options) {
-    super(0, 0)
+    super(10, 10)
+    this.borderWidth = 5
     this.width = options.width
     this.height = options.height
   }
@@ -49,14 +50,7 @@ class Shape extends Position {
   get range() {}
 }
 
-class RoundedShape extends Shape {
-  constructor(options) {
-    super(options)
-    this.radius = this.width / 2
-  }
-}
-
-class Circle extends RoundedShape {
+class CanvasCircle extends Shape {
   constructor(options) {
     super({
       ...options, 
@@ -65,10 +59,23 @@ class Circle extends RoundedShape {
     this.position = { x: this.width, y: this.width }
   }
   draw(cx) {
+    const borderWidth = this.borderWidth
+
     cx.beginPath()
     cx.fillStyle = "black"
     cx.arc(this.position.x, this.position.y, this.width, 0, Math.PI * 2)
-    cx.stroke()
+    cx.fill()
+
+    cx.fillStyle = "white"
+    cx.beginPath()
+    cx.arc(
+      this.position.x, 
+      this.position.y, 
+      this.width - borderWidth, 
+      0, 
+      Math.PI * 2
+    )
+    cx.fill()
   }
   inRange(x, y) {
     const deltaX = (x - this.position.x) ** 2
@@ -77,7 +84,7 @@ class Circle extends RoundedShape {
   }
 }
 
-class Rectangle extends Shape {
+class CanvasRectangle extends Shape {
   constructor(options) {
     super({
       ...options,
@@ -94,7 +101,7 @@ class Rectangle extends Shape {
     this.height = height
   }
   draw(cx) {
-    const borderWidth = 5
+    const borderWidth = this.borderWidth
     cx.fillStyle = "black"
     cx.fillRect(this.position.x, this.position.y, this.width, this.height)
     cx.fillStyle = "white"
@@ -112,40 +119,72 @@ class Rectangle extends Shape {
   }
 }
 
-function createShape(name) {
-  const { CIRCLE, RECTANGLE } = SHAPES
-  const options = {
-    width: 100,
-    height: 100,
+class Drawer {
+  constructor(field) {
+    this.field = field
+    this.shapes_array = []
+
+    ;[].forEach.call(panel_items, el => {
+      el.addEventListener("click", ( ) => {
+        const name = el.dataset.shape
+        const shape = this.createShape(name)
+        this.shapes_array.push(shape)
+        this.drawShapes()
+      })
+    })
+
+    this.setListenerOnClickShape()
   }
-  switch(name) {
-    case CIRCLE: return new Circle(options)
-    case RECTANGLE: return new Rectangle(options)
+  setListenerOnClickShape() {
+    this.field.addEventListener("click", event => {
+      const xAxis = event.layerX
+      const yAxis = event.layerY
+      const shape = this.shapes_array.find(el => el.inRange(xAxis, yAxis))
+      if (shape) {
+        console.log("congratulations!!! u find her")
+      }
+    })
+  }
+  drawShapes() {}
+  createShape() {}
+}
+
+class CanvasDrawer extends Drawer {
+  constructor(field) {
+    super(field)
+    this.context = field.getContext("2d")
+  }
+  createShape(name) {
+    const { CIRCLE, RECTANGLE } = SHAPES
+    const options = {
+      width: 100,
+      height: 100,
+    }
+    switch(name) {
+      case CIRCLE: return new CanvasCircle(options)
+      case RECTANGLE: return new CanvasRectangle(options)
+    }
+  }
+  drawShapes() {
+    this.shapes_array.forEach(shape => shape.draw(this.context))
   }
 }
 
-const shapes_array = []
+class SVGDrawer extends Drawer {
 
-;[].forEach.call(panel_items, el => {
-  el.addEventListener("click", ( ) => {
-    const name = el.dataset.shape
-    const shape = createShape(name)
-    shapes_array.push(shape)
-    drawShapes()
-  })
-})
-
-function drawShapes() {
-  shapes_array.forEach(shape => {
-    shape.draw(cx)
-  })
 }
 
-canvas.addEventListener("click", event => {
-  const xAxis = event.layerX
-  const yAxis = event.layerY
-  const shape = shapes_array.find(el => el.inRange(xAxis, yAxis))
-  if (shape) {
-    console.log("congratulations!!! u find her")
+class Application {
+  constructor({ type, id }) {
+    this.init(type, id)
   }
-})
+  init(type, id) {
+    const field = document.getElementById(id)
+    switch(type) {
+      case "canvas": return new CanvasDrawer(field)
+      case "svg": return new SVGDrawer(field)
+    }
+  }
+}
+
+new Application({ type: "canvas", id: "canvas" })
