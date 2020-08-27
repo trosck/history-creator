@@ -168,6 +168,7 @@ class Drawer {
     })
   }
   handleClick() {}
+  handleDragElement() {}
   drawShapes() {}
   createShape() {}
 }
@@ -196,40 +197,56 @@ class CanvasDrawer extends Drawer {
   handleClick(event) {
     const xAxis = event.layerX
     const yAxis = event.layerY
-    const shape = this.shapes_array.find(el => el.inRange(xAxis, yAxis))
+    
+    const len = this.shapes_array.length - 1
+    const shapeIndex = len - []
+      .concat(this.shapes_array)
+      .reverse()
+      .findIndex(el => el.inRange(xAxis, yAxis))
 
+    let shape 
+    if (shapeIndex >= 0 && shapeIndex <= len) {
+      shape = this.shapes_array.splice(shapeIndex, 1)[0]
+      this.shapes_array.push(shape)
+      this.handleDragElement(shape)
+    }
+    else {
+      this.reDraw()
+    }
+  }
+  handleDragElement(shape) {
+    this.reDraw()
+  
+    shape.drawBorder(this.context)
+    let deltaX, deltaY 
+
+    const dragElement = ({ layerX, layerY }) => {
+      const { x, y } = shape.position
+      if (!deltaX && !deltaY) {
+        deltaX = layerX - x
+        deltaY = layerY - y
+      }
+      shape.position = {
+        x: layerX - deltaX,
+        y: layerY - deltaY,
+      }
+      this.reDraw()
+      shape.drawBorder(this.context)
+    }
+
+    const throttledDragElement = throttle(dragElement, 1000 / 60)
+
+    const removeListeners = ( ) => {
+      this.field.removeEventListener("mousemove", throttledDragElement)
+      this.field.removeEventListener("mouseup", removeListeners)
+    }
+
+    this.field.addEventListener("mousemove", throttledDragElement)
+    this.field.addEventListener("mouseup", removeListeners)
+  }
+  reDraw() {
     this.field.reset()
     this.drawShapes()
-    
-    if (shape) {
-      shape.drawBorder(this.context)
-      let deltaX, deltaY 
-
-      const dragElement = ({ layerX, layerY }) => {
-        const { x, y } = shape.position
-        if (!deltaX && !deltaY) {
-          deltaX = layerX - x
-          deltaY = layerY - y
-        }
-        shape.position = {
-          x: layerX - deltaX,
-          y: layerY - deltaY,
-        }
-        this.field.reset()
-        this.drawShapes()
-        shape.drawBorder(this.context)
-      }
-
-      const throttledDragElement = throttle(dragElement, 1000 / 60)
-
-      const removeListeners = ( ) => {
-        this.field.removeEventListener("mousemove", throttledDragElement)
-        this.field.removeEventListener("mouseup", removeListeners)
-      }
-
-      this.field.addEventListener("mousemove", throttledDragElement)
-      this.field.addEventListener("mouseup", removeListeners)
-    }
   }
 }
 
