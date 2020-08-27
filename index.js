@@ -44,6 +44,7 @@ class Shape extends Position {
   resize() {}
   draw() {}
   inRange() {}
+  drawBorder() {}
   get range() {}
 }
 
@@ -57,8 +58,6 @@ class CanvasCircle extends Shape {
     })
   }
   draw(cx) {
-    const borderWidth = this.borderWidth
-
     cx.beginPath()
     cx.fillStyle = "black"
     cx.arc(
@@ -75,7 +74,7 @@ class CanvasCircle extends Shape {
     cx.arc(
       this.position.x, 
       this.position.y, 
-      this.width - borderWidth, 
+      this.width - this.borderWidth, 
       0, 
       Math.PI * 2
     )
@@ -85,6 +84,19 @@ class CanvasCircle extends Shape {
     const deltaX = (x - this.position.x) ** 2
     const deltaY = (y - this.position.y) ** 2
     return Math.sqrt(deltaX + deltaY) <= this.width
+  }
+  drawBorder(cx) {
+    cx.setLineDash([5, 5])
+    cx.lineWidth = 5
+    cx.beginPath();
+    cx.arc(
+      this.position.x,
+      this.position.y,
+      this.width - this.borderWidth + 10, 
+      0, 
+      Math.PI * 2
+    );
+    cx.stroke()
   }
 }
 
@@ -121,6 +133,16 @@ class CanvasRectangle extends Shape {
     const compareY = y >= this.range.y[0] && y <= this.range.y[1]
     return compareX && compareY
   }
+  drawBorder(cx) {
+    cx.setLineDash([5, 5])
+    cx.lineWidth = 5
+    cx.strokeRect(
+      this.position.x - 5,
+      this.position.y - 5,
+      this.width + 10,
+      this.height + 10,
+    )
+  }
 }
 
 class Drawer {
@@ -142,42 +164,11 @@ class Drawer {
   }
   #setListenerOnClickShape() {
     this.field.addEventListener("mousedown", event => {
-      const xAxis = event.layerX
-      const yAxis = event.layerY
-      const shape = this.shapes_array.find(el => el.inRange(xAxis, yAxis))
-
-      if (shape) {
-        let deltaX, deltaY 
-
-        const dragElement = ({ layerX, layerY }) => {
-          const { x, y } = shape.position
-          if (!deltaX && !deltaY) {
-            deltaX = layerX - x
-            deltaY = layerY - y
-          }
-          shape.position = {
-            x: layerX - deltaX,
-            y: layerY - deltaY,
-          }
-          this.field.reset()
-          this.drawShapes()
-        }
-
-        const throttledDragElement = throttle(dragElement, 1000 / 60)
-
-        const removeListeners = ( ) => {
-          this.field.removeEventListener("mousemove", throttledDragElement)
-          this.field.removeEventListener("mouseup", removeListeners)
-        }
-
-        this.field.addEventListener("mousemove", throttledDragElement)
-        this.field.addEventListener("mouseup", removeListeners)
-      }
+      this.handleClick(event)
     })
   }
-  drawShapes() {
-    this.shapes_array.forEach(shape => shape.draw(this.context))
-  }
+  handleClick() {}
+  drawShapes() {}
   createShape() {}
 }
 
@@ -197,6 +188,47 @@ class CanvasDrawer extends Drawer {
     switch(name) {
       case CIRCLE: return new CanvasCircle(options)
       case RECTANGLE: return new CanvasRectangle(options)
+    }
+  }
+  drawShapes() {
+    this.shapes_array.forEach(shape => shape.draw(this.context))
+  }
+  handleClick(event) {
+    const xAxis = event.layerX
+    const yAxis = event.layerY
+    const shape = this.shapes_array.find(el => el.inRange(xAxis, yAxis))
+
+    this.field.reset()
+    this.drawShapes()
+    
+    if (shape) {
+      shape.drawBorder(this.context)
+      let deltaX, deltaY 
+
+      const dragElement = ({ layerX, layerY }) => {
+        const { x, y } = shape.position
+        if (!deltaX && !deltaY) {
+          deltaX = layerX - x
+          deltaY = layerY - y
+        }
+        shape.position = {
+          x: layerX - deltaX,
+          y: layerY - deltaY,
+        }
+        this.field.reset()
+        this.drawShapes()
+        shape.drawBorder(this.context)
+      }
+
+      const throttledDragElement = throttle(dragElement, 1000 / 60)
+
+      const removeListeners = ( ) => {
+        this.field.removeEventListener("mousemove", throttledDragElement)
+        this.field.removeEventListener("mouseup", removeListeners)
+      }
+
+      this.field.addEventListener("mousemove", throttledDragElement)
+      this.field.addEventListener("mouseup", removeListeners)
     }
   }
 }
