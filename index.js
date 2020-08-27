@@ -5,6 +5,19 @@ const SHAPES = {
   RECTANGLE: "rectangle",
 }
 
+const throttle = (func, ms=0) => {
+  let canRun = true;
+  return (...args) => {
+    if (canRun) {
+      canRun = false
+      setTimeout(( ) => {
+        canRun = true
+        func.apply(this, args)
+      }, ms)
+    }
+  }
+}
+
 class Position {
   constructor(x, y) {
     this.x = x
@@ -39,9 +52,9 @@ class CanvasCircle extends Shape {
     super({
       ...options, 
       width: options.width / 2,
+      initialX: options.initialX + options.width / 2,
+      initialY: options.initialY + options.width / 2,
     })
-    const { x, y } = this.position
-    this.position = { x: this.width + x, y: this.width + y }
   }
   draw(cx) {
     const borderWidth = this.borderWidth
@@ -132,19 +145,32 @@ class Drawer {
       const xAxis = event.layerX
       const yAxis = event.layerY
       const shape = this.shapes_array.find(el => el.inRange(xAxis, yAxis))
-      if (shape) {
-        const removeListeners = ( ) => {
-          this.field.removeEventListener("mousemove", dragElement)
-          this.field.removeEventListener("mouseup", removeListeners)
-        }
 
-        const dragElement = ({ layerX: x, layerY: y }) => {
-          shape.position = { x, y }
+      if (shape) {
+        let deltaX, deltaY 
+
+        const dragElement = ({ layerX, layerY }) => {
+          const { x, y } = shape.position
+          if (!deltaX && !deltaY) {
+            deltaX = layerX - x
+            deltaY = layerY - y
+          }
+          shape.position = {
+            x: layerX - deltaX,
+            y: layerY - deltaY,
+          }
           this.field.reset()
           this.drawShapes()
         }
 
-        this.field.addEventListener("mousemove", dragElement)
+        const throttledDragElement = throttle(dragElement, 1000 / 60)
+
+        const removeListeners = ( ) => {
+          this.field.removeEventListener("mousemove", throttledDragElement)
+          this.field.removeEventListener("mouseup", removeListeners)
+        }
+
+        this.field.addEventListener("mousemove", throttledDragElement)
         this.field.addEventListener("mouseup", removeListeners)
       }
     })
