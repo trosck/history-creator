@@ -1,9 +1,0 @@
-history=Ты обычный студент шараги 4 прогула из 10. Сегодня в очередной раз ты бы забил и никуда не пошёл, но сегодня мало того, что холодно, так ещё и зачёт будет. Вообщем ты страдай в тщетных потугах, а я пойду кофейку бахну.__end step1=Встать с первым будильником__end step1Route=10__end step2=Поспать до второго__end step2Route=11__end step3=Забить и спать__end step3Route=90__end pic=Утро__end currentLine=1__end 
-history=Ты поспал. Молодец. Знаешь как собрать/разобрать калаш?__end step1=Заново__end step1Route=1__end step2=Назад__end step2Route=1__end step3=Выход__end step3Route=0__end pic=Армия__end currentLine=90__end 
-history=Ох! Ты встал. Красавчик! Ты б причесался хотя бы.__end step1=Пойти в ванную__end step1Route=2__end step2=Пойти на кухню__end step2Route=3__end step3=В коридор__end step3Route=4__end pic=Проснулся__end currentLine=10__end 
-history=__end step1=Воспользоваться туалетом__end step1Route=21__end step2=Умыться. почистить зубы__end step2Route=22__end step3=Вернуться__end step3Route=10__end pic=Санузел__end currentLine=2__end 
-history=Высыпаться конечно надо, но теперь ты не успеешь навернуть завтрак__end step1=Пойти в ванную__end step1Route=2__end step2=Пойти на кухню__end step2Route=3__end step3=В коридор__end step3Route=4__end pic=Проснулся__end currentLine=11__end 
-history=Отлично. теперь не прижмёт в ненужный момент.__end step1=...__end step1Route=0__end step2=Умыться. почистить зубы__end step2Route=22__end step3=Вернуться__end step3Route=10__end pic=Санузел
-__end currentLine=21__end 
-history=Теперь выглядишь как человек.__end step1=Воспользоваться туалетом__end step1Route=21__end step2=...__end step2Route=0__end step3=Вернуться__end step3Route=10__end pic=Санузел__end currentLine=22__end 
-0
