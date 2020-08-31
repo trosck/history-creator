@@ -1,5 +1,0 @@
-history=Жил был кто то, писал он сюжет...__endstep1=Почесать репу.__endstep2=Пойти поссать.__endstep3=Поспать.__endpic=ф__endline=0__endnextLine=2__end
-history=Ты почесал репу... и сдох.__endstep1=...__endstep2=...__endstep3=...__endpic=в__endline=1__endnextLine=1__end
-history=Ты пошел поссать, но вдруг ты вступил в гавно__endstep1=Начать агитировать народ.__endstep2=Пойти поссать.__endstep3=Сходить в душ.__endpic=ф__endline=2__endnextLine=3__end
-history=Ты дошел до туалета... и сдох.__endstep1=...__endstep2=...__endstep3=...__endpic=23__endline=3__endnextLine=0__end
-history=Ты поспал... молодец, ты сдох во сне.__endstep1=...__endstep2=...__endstep3=...__endpic=ыв__endline=4__endnextLine=0__end
