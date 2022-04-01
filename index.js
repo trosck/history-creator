@@ -49,62 +49,66 @@ class Shape extends Position {
 }
 
 class CanvasCircle extends Shape {
-  constructor(options) {
+  constructor(options, context) {
     super({
       ...options, 
       width: options.width / 2,
       initialX: options.initialX + options.width / 2,
       initialY: options.initialY + options.width / 2,
     })
+    this.context = context
   }
-  draw(cx) {
-    cx.beginPath()
-    cx.fillStyle = "black"
-    cx.arc(
+  draw() {
+    const canvas = this.context
+
+    canvas.beginPath()
+    canvas.fillStyle = "black"
+    canvas.arc(
       this.position.x, 
       this.position.y, 
       this.width, 
       0, 
       Math.PI * 2
     )
-    cx.fill()
+    canvas.fill()
 
-    cx.beginPath()
-    cx.fillStyle = "white"
-    cx.arc(
+    canvas.beginPath()
+    canvas.fillStyle = "white"
+    canvas.arc(
       this.position.x, 
       this.position.y, 
       this.width - this.borderWidth, 
       0, 
       Math.PI * 2
     )
-    cx.fill()
+    canvas.fill()
   }
   inRange(x, y) {
     const deltaX = (x - this.position.x) ** 2
     const deltaY = (y - this.position.y) ** 2
     return Math.sqrt(deltaX + deltaY) <= this.width
   }
-  drawBorder(cx) {
-    cx.setLineDash([5, 5])
-    cx.lineWidth = 5
-    cx.beginPath();
-    cx.arc(
+  drawBorder() {
+    const canvas = this.context
+
+    canvas.setLineDash([5, 5])
+    canvas.lineWidth = 5
+    canvas.beginPath();
+    canvas.arc(
       this.position.x,
       this.position.y,
       this.width - this.borderWidth + 10, 
       0, 
       Math.PI * 2
     );
-    cx.stroke()
+    canvas.stroke()
   }
 }
 
 class CanvasRectangle extends Shape {
-  constructor(options) {
-    super({
-      ...options,
-    })
+  constructor(options, context) {
+    super(options)
+    this.context = context
   }
   get range() {
     return {
@@ -116,12 +120,13 @@ class CanvasRectangle extends Shape {
     this.width = width
     this.height = height
   }
-  draw(cx) {
+  draw() {
+    const canvas = this.context
     const borderWidth = this.borderWidth
-    cx.fillStyle = "black"
-    cx.fillRect(this.position.x, this.position.y, this.width, this.height)
-    cx.fillStyle = "white"
-    cx.fillRect(
+    canvas.fillStyle = "black"
+    canvas.fillRect(this.position.x, this.position.y, this.width, this.height)
+    canvas.fillStyle = "white"
+    canvas.fillRect(
       this.position.x + borderWidth, 
       this.position.y + borderWidth, 
       this.width - borderWidth * 2,
@@ -133,10 +138,11 @@ class CanvasRectangle extends Shape {
     const compareY = y >= this.range.y[0] && y <= this.range.y[1]
     return compareX && compareY
   }
-  drawBorder(cx) {
-    cx.setLineDash([5, 5])
-    cx.lineWidth = 5
-    cx.strokeRect(
+  drawBorder() {
+    const canvas = this.context
+    canvas.setLineDash([5, 5])
+    canvas.lineWidth = 5
+    canvas.strokeRect(
       this.position.x - 5,
       this.position.y - 5,
       this.width + 10,
@@ -178,6 +184,7 @@ class CanvasDrawer extends Drawer {
     super(field)
     this.context = field.getContext("2d")
   }
+
   createShape(name) {
     const { CIRCLE, RECTANGLE } = SHAPES
     const options = {
@@ -187,37 +194,30 @@ class CanvasDrawer extends Drawer {
       initialY: 100,
     }
     switch(name) {
-      case CIRCLE: return new CanvasCircle(options)
-      case RECTANGLE: return new CanvasRectangle(options)
+      case CIRCLE: return new CanvasCircle(options, this.context)
+      case RECTANGLE: return new CanvasRectangle(options, this.context)
     }
   }
-  drawShapes() {
-    this.shapes_array.forEach(shape => shape.draw(this.context))
-  }
-  handleClick(event) {
-    const xAxis = event.layerX
-    const yAxis = event.layerY
-    
-    const len = this.shapes_array.length - 1
-    const shapeIndex = len - []
-      .concat(this.shapes_array)
-      .reverse()
-      .findIndex(el => el.inRange(xAxis, yAxis))
 
-    let shape 
-    if (shapeIndex >= 0 && shapeIndex <= len) {
-      shape = this.shapes_array.splice(shapeIndex, 1)[0]
-      this.shapes_array.push(shape)
-      this.handleDragElement(shape)
-    }
-    else {
-      this.reDraw()
-    }
+  drawShapes() {
+    this.shapes_array.forEach(shape => shape.draw())
   }
+
+  handleClick(event) {
+    const { layerX, layerY } = event
+    const shapeIndex = this.shapes_array.findIndex(
+      el => el.inRange(layerX, layerY)
+    )
+
+    console.log('----------index', shapeIndex, layerX, layerY, this.shapes_array)
+    this.reDraw()
+    this.handleDragElement(this.shapes_array[shapeIndex])
+  }
+
   handleDragElement(shape) {
     this.reDraw()
   
-    shape.drawBorder(this.context)
+    shape.drawBorder()
     let deltaX, deltaY 
 
     const dragElement = ({ layerX, layerY }) => {
@@ -231,7 +231,7 @@ class CanvasDrawer extends Drawer {
         y: layerY - deltaY,
       }
       this.reDraw()
-      shape.drawBorder(this.context)
+      shape.drawBorder()
     }
 
     const throttledDragElement = throttle(dragElement, 1000 / 60)
